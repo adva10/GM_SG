@@ -10,6 +10,25 @@ from contextlib import contextmanager
 from timeit import default_timer
 #from utils import *
 
+
+import argparse, os
+parser = argparse.ArgumentParser()
+parser.add_argument("--wine", choices=["white", "red"], default="white",
+                    help="choose which wine dataset to run on")
+args = parser.parse_args()
+
+file_map = {
+    "white": "data/winequality-white.csv",
+    "red":   "data/winequality-red.csv"
+}
+# ----- NEW mapping for the convergence experiment -----
+conv_dir_map = {
+    "white": "results/exp_convergence/",        # keep original path
+    "red":   "results/exp_convergence_red/"     # new sibling folder
+}
+os.makedirs(conv_dir_map[args.wine], exist_ok=True)
+
+
 @contextmanager
 def timer(tag=''):
     with open('time_{}.log'.format(tag), 'a') as f:
@@ -156,7 +175,7 @@ if __name__ == '__main__':
     #z = torch.zeros([len(y_train),1])
     N_EXP = 20
     # Read wine dataset
-    data = pd.read_csv("data/winequality-white.csv", sep = ";")
+    data = pd.read_csv(file_map[args.wine], sep=';')
     X = data.loc[:, data.columns != "quality"]
     y = data.quality
     ##
@@ -184,5 +203,5 @@ if __name__ == '__main__':
         ##
         w_nash, full_loss = train_nash_rr(X_train, y_train, params, verbose = False, compute_loss = True)
         loss = pd.DataFrame({"Epoch": range(params["outer_epochs"]) , "Loss": full_loss})
-        name = "results/exp_convergence/"+"convergence" + str(i) +".csv"
+        name = f"{conv_dir_map[args.wine]}convergence{i}.csv"
         loss.to_csv(name, index=False)

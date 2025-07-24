@@ -8,12 +8,30 @@ from torch.autograd import Variable
 from torch.autograd import grad
 from nash_advreg import *
 
+import argparse, os
+parser = argparse.ArgumentParser()
+parser.add_argument("--wine", choices=["white", "red"], default="white",
+                    help="choose which wine dataset to run on")
+args = parser.parse_args()
+
+file_map = {
+    "white": "data/winequality-white.csv",
+    "red":   "data/winequality-red.csv"
+}
+results_dir_map = {
+    "white": "results/exp_white/",
+    "red":   "results/exp_red/"
+}
+os.makedirs(results_dir_map[args.wine], exist_ok=True)
+
+
+
 if __name__ == '__main__':
 
     #c_d =
     #z = torch.zeros([len(y_train),1])
     # Read wine dataset
-    data = pd.read_csv("data/winequality-white.csv", sep = ";")
+    data = pd.read_csv(file_map[args.wine], sep=';')
     X = data.loc[:, data.columns != "quality"]
     y = data.quality
     ##
@@ -25,7 +43,7 @@ if __name__ == '__main__':
     stop = 1.0
     grid_size = 10
     MEAN_GRID = np.logspace(np.log10(start), np.log10(stop), num=grid_size)
-    N_EXP = 10 # For hold-out validation
+    N_EXP = 20 # For hold-out validation
     ##
     rmse_raw_clean = np.zeros(N_EXP)
     rmse_nash_clean = np.zeros(N_EXP)
@@ -79,5 +97,5 @@ if __name__ == '__main__':
         df = pd.DataFrame({"EXP":range(N_EXP), "raw_cleandata":rmse_raw_clean,
          "raw_atdata":rmse_raw_at, "nash_rawdata":rmse_nash_clean, "nash_atdata":rmse_nash_at})
 
-        name = "results/exp1/"+"mean"+str(MEAN)+".csv"
+        name = f"{results_dir_map[args.wine]}mean{MEAN}.csv"
         df.to_csv(name, index=False)
